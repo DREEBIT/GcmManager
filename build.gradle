@@ -10,6 +10,22 @@ buildscript {
 
 
 apply plugin: 'android-library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = 'com.dreebit'
+version = '0.1'
+
+configurations {
+    archives {
+        extendsFrom configurations.default
+    }
+}
+
+signing {
+    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
 
 repositories {
     mavenCentral()
@@ -41,7 +57,53 @@ android {
 }
 
 dependencies {
+
     compile 'com.android.support:appcompat-v7:+'
 
     compile 'com.google.android.gms:play-services:4.0.+'
+
+}
+
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: sonatypeRepo) {
+            authentication(
+                    userName: sonatypeUsername,
+                    password: sonatypePassword
+            )
+        }
+
+        pom.project {
+            name 'GcmManager'
+            packaging 'aar'
+            description 'Helper for Google Cloud Messaging (Android)'
+            url 'https://github.com/DREEBIT/GcmManager'
+
+            scm {
+                url 'scm:git@github.com:DREEBIT/GcmManager.git'
+                connection 'scm:git@github.com:DREEBIT/GcmManager.git'
+                developerConnection 'scm:git@github.com:DREEBIT/GcmManager.git'
+            }
+
+            licenses {
+                license {
+                    name 'The MIT License (MIT)'
+                    url 'http://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'tm'
+                    name 'Toni Moeckel'
+                    email 'tonimoeckel@gmail.com'
+                }
+            }
+        }
+    }
 }
